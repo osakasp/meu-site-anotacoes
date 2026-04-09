@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Minhas Anotações</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e1e2f, #2a2a40);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      padding: 30px;
+    }
+
+    .container {
+      width: 400px;
+      background: #2a2a40;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    textarea {
+      width: 100%;
+      height: 80px;
+      border-radius: 8px;
+      border: none;
+      padding: 10px;
+      margin-bottom: 10px;
+      resize: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #6c63ff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #5750d4;
+    }
+
+    .note {
+      background: #3a3a5a;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .date {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 5px;
+    }
+
+    .actions {
+      position: absolute;
+      right: 10px;
+      top: 5px;
+    }
+
+    .actions span {
+      cursor: pointer;
+      margin-left: 8px;
+    }
+
+    .delete {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📝 Anotações</h1>
+
+  <textarea id="noteInput" placeholder="Digite sua anotação..."></textarea>
+  <button onclick="addNote()">Salvar</button>
+
+  <div id="notesList"></div>
+</div>
+
+<script>
+  function getNotes() {
+    return JSON.parse(localStorage.getItem("notes")) || [];
+  }
+
+  function saveNotes(notes) {
+    localStorage.setItem("notes", JSON.stringify(notes));
+  }
+
+  function loadNotes() {
+    const notes = getNotes();
+    const list = document.getElementById("notesList");
+    list.innerHTML = "";
+
+    notes.forEach((note, index) => {
+      const div = document.createElement("div");
+      div.className = "note";
+
+      if (note.editing) {
+        div.innerHTML = `
+          <textarea id="edit-${index}">${note.text}</textarea>
+          <button onclick="saveEdit(${index})">💾 Salvar</button>
+        `;
+      } else {
+        div.innerHTML = `
+          <div>${note.text}</div>
+          <div class="date">${note.date}</div>
+
+          <div class="actions">
+            <span onclick="editNote(${index})">✏️</span>
+            <span class="delete" onclick="deleteNote(${index})">✖</span>
+          </div>
+        `;
+      }
+
+      list.appendChild(div);
+    });
+  }
+
+  function addNote() {
+    const input = document.getElementById("noteInput");
+    const text = input.value.trim();
+
+    if (!text) return;
+
+    const notes = getNotes();
+
+    notes.push({
+      text: text,
+      date: new Date().toLocaleString(),
+      editing: false
+    });
+
+    saveNotes(notes);
+    input.value = "";
+    loadNotes();
+  }
+
+  function deleteNote(index) {
+    const notes = getNotes();
+    notes.splice(index, 1);
+    saveNotes(notes);
+    loadNotes();
+  }
+
+  function editNote(index) {
+    const notes = getNotes();
+    notes[index].editing = true;
+    saveNotes(notes);
+    loadNotes();
+  }
+
+  function saveEdit(index) {
+    const notes = getNotes();
+    const newText = document.getElementById(`edit-${index}`).value.trim();
+
+    if (!newText) return;
+
+    notes[index].text = newText;
+    notes[index].editing = false;
+
+    saveNotes(notes);
+    loadNotes();
+  }
+
+  loadNotes();
+</script>
+
+</body>
+</html>
